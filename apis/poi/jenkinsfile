@@ -1,0 +1,34 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Git checkout') {
+            steps{
+                // Get source code from a GitHub repository
+                git branch:'main', url:'https://github.com/RayMaAU/openhack-devops-team.git'
+            }
+        }
+        
+        stage('Build') {
+            steps{
+                sh 'dotnet restore ./apis/poi/poi.sln'
+                sh 'dotnet clean ./apis/poi/poi.sln --configuration Release'
+                sh 'dotnet build ./apis/poi/poi.sln'
+            }
+        }
+        
+        stage('Test') {
+            steps{
+                sh 'dotnet test ./apis/poi/tests/UnitTests/UnitTests.csproj  --configuration Release --no-restore'
+                sh 'dotnet test ./apis/poi/tests/IntegrationTests/IntegrationTests.csproj  --configuration Release --no-restore'
+            }
+        }
+        
+        stage('Publish') {
+            steps{
+                sh 'dotnet publish ./apis/poi/web/poi.csproj --configuration Release --no-restore'
+                sh 'ls -la ./apis/poi/web/bin/Release/netcoreapp3.1/publish/'
+            }
+        }
+    }
+}
